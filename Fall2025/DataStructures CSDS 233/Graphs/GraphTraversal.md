@@ -76,9 +76,9 @@ public static void breadthFirstTraversal(int vertex) {
 ```
 
 Complexities for Graph with {V} vertices and {E} edges:
-- Traversal Complexity: O(V + 2E)
+- Traversal Complexity: O($V + 2E$)
   - This is because you process every node and every edge (twice because dups)
-  - Worst Case: complete graph where E -> V^2, so O(V^2)
+  - Worst Case: complete graph where $E ~ V^2$, so O($V^2$)
 
 
 ## Shortest-Path Unweighted
