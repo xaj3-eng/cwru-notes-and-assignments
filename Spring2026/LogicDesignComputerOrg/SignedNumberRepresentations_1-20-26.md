@@ -107,11 +107,8 @@ except all 1s and 0s are flipped
 
 ### 2's Complement Representation (Radix Complement Representation for non-binary)
 
-The most significant bit is represents $2^{n-1}$
+The most significant bit is represents $-2^{n-1}$
 
-- The most significant bit just represents positive or negative:
-  - 0 = positive
-  - 1 = negative
 - The magnitude is represented as the complement + 1 if the number is negative
 
 Positive numbers will look the same
@@ -132,3 +129,82 @@ represented
 
 - There is no negative 0 value
 - There is an additional negative number represented
+
+### Overflow
+
+Two's Complement with 4 bits example:
+
+$$6_{10}+2_{10}=?_{10}$$
+$$0110_2+0010_2=1000_2=-8_{10}$$
+
+$1000$ represents -8. When you exceed the maximum positive integer,
+you will wrap around to the lowest negative integers
+
+Overflow occurs when the 'carry in' input for the MSB is 1
+
+Fun Fact: If you add numbers with different signs, you won't overflow
+
+### Ignoring MSB Carry
+
+$$-6_{10}-2_{10}=-8_{10}$$
+$$1010_2+1110_2=11000_2$$
+
+We must ignore the carry of the MSB for two's complement, so when $n = 4$,
+
+$$11000_2=1000_2=-8_{10}$$
+
+Ex. **Underflow**. When $n = 4$:
+
+$$-5_{10}-6_{10}=5_{10}$$
+$$1011_2+1110_2=11001_2$$
+$$=1001_2=5_{10}$$
+
+### Subtracter Circuit
+
+You simply negate the integer on the right, and then add them
+
+$$4_{10}-3_{10}=1_{10}$$
+$$0100_2-0011_2$$
+$$=0100_2+1101_2$$
+$$=0001_2=1_{10}$$
+
+This is the most efficient way to subtract in terms of circuits:
+
+- You're given two binary numbers
+- You flip all the bits of the right number
+- You make the 'carry in' for the LSB a 1
+
+### Review
+
+Representations of $+10_{10}$ with 8 bits
+
+- Sign-Magnitude: $00001010_2$
+- Two's Complement: $00001010_2$
+  - $10 mod 2 = 0$
+  - $5 mod 2 = 1$
+  - $2 mod 2 = 0$
+  - $1 mod 2 = 1$
+
+Representations of $-10_{10}$ with 8 bits
+
+- Sign-Magnitude: $10001010_2$
+  - Flipped the first bit
+- Two's Complement: $11110110_2$
+  - Flipped all bits and **added 1**
+  - **REMEMBER TO ADD ONE**
+
+#### How Many Numbers Represented with n bits?
+
+One's complement (Sign-Magnitude): $-(2^{n-1} - 1)$ to $2^{n-1} - 1$
+
+Two's complement: $-2^{n-1}$ to $2^{n-1} - 1$
+
+#### From Table 2-6
+
+Successive Two's complement numbers can be obtained by doing
+regular binary addition.
+
+- Remember that if you ignore the carry of the MSB
+- You go from -1 to 0 when you ignore the carry of the MSB
+- When you exceed the greatest positive number, you will wrap
+around to the greatest *(magntude)* negative number
