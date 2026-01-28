@@ -86,7 +86,7 @@ There is some inefficiency: for $n$ bits, you can represent $2^n - 1$ numbers
 
 > **Sign-Magnitude Representation is not a very good representation for circuits**
 
-### Complement Number Representation
+### 1's Complement Number Representation
 
 > Negate numbers by taking their complement
 
@@ -140,7 +140,7 @@ $$0110_2+0010_2=1000_2=-8_{10}$$
 $1000$ represents -8. When you exceed the maximum positive integer,
 you will wrap around to the lowest negative integers
 
-Overflow occurs when the 'carry in' input for the MSB is 1
+Overflow occurs when the 'carry in' input for the MSB is the same as the carry out
 
 Fun Fact: If you add numbers with different signs, you won't overflow
 
@@ -195,7 +195,7 @@ Representations of $-10_{10}$ with 8 bits
 
 #### How Many Numbers Represented with n bits?
 
-One's complement (Sign-Magnitude): $-(2^{n-1} - 1)$ to $2^{n-1} - 1$
+One's complement & Sign-Magnitude: $-(2^{n-1} - 1)$ to $2^{n-1} - 1$
 
 Two's complement: $-2^{n-1}$ to $2^{n-1} - 1$
 
