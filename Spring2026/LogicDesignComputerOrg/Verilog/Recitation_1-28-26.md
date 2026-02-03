@@ -65,7 +65,7 @@ endmodule
 ## Calling Other Modules
 
 ```verilog
-// Call testmodue
+// Call testmodule
 test_module(
   // I forgot syntax
 )
