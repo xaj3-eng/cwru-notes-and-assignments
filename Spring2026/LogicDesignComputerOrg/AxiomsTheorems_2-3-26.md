@@ -33,7 +33,7 @@ Axioms 1 through 5 (and complements) completely define the switching algebra
 
 ## Theorems
 
-Theorem 1 and 1': Identities
+Theorem 1 and 1': Identities / Single Value Theorem
 
 - $x + 0 = x$
   - Proof by perfect induction
@@ -55,7 +55,10 @@ Theorem 4: Involution
 
 - $(x')' = x$
 
-I missed 5, you can add it if you're feeling nice
+Theorem 5 and 5': Complements
+
+- $x + x' = 1$
+- $x \cdot x' = 0$
 
 Theorem 6 and 6': Commutativity
 
@@ -118,7 +121,7 @@ Theorem 13 and 13': DeMorgan's Theorem
 - $(x_1 \cdot x_2 \cdot ... \cdot x_n)' = x_1' + x_2' + ... + x_n'$
 - $(x_1 + x_2 + ... + x_n)' = x_1' \cdot x_2' \cdot ... \cdot x_n'$
 
-- Example: 
+- Example:
   - $(x \cdot y)' = x' \cdot y'$
 
 Generalized DeMorgan's:
