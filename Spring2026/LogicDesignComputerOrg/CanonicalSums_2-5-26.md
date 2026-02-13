@@ -1,4 +1,4 @@
-# Thursday
+# Canonical Sums and Min/Max terms
 
 ## Review
 
