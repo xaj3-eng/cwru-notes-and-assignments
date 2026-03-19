@@ -1,0 +1,166 @@
+$date
+	Wed Mar 18 10:23:34 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module lab6 $end
+$var reg 1 ! clk $end
+$var reg 8 " d_out [7:0] $end
+$var reg 3 # in [2:0] $end
+$var reg 3 $ out [2:0] $end
+$scope function decoder3to8 $end
+$var reg 1 % en_b $end
+$var reg 3 & in [2:0] $end
+$upscope $end
+$scope function encoder8to3 $end
+$var reg 1 ' en_b $end
+$var reg 8 ( in_b [7:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+b1111111 (
+0'
+b111 &
+0%
+b111 $
+b111 #
+b1111111 "
+1!
+$end
+#5
+1'
+b11111111 (
+b11111111 "
+1%
+0!
+#10
+b0 $
+b0 &
+b0 #
+0'
+b11111110 (
+b11111110 "
+0%
+1!
+#15
+b111 $
+1'
+b11111111 (
+b11111111 "
+1%
+0!
+#20
+b1 &
+b1 #
+b1 $
+0'
+b11111101 (
+b11111101 "
+0%
+1!
+#25
+b111 $
+1'
+b11111111 (
+b11111111 "
+1%
+0!
+#30
+b10 &
+b10 #
+b10 $
+0'
+b11111011 (
+b11111011 "
+0%
+1!
+#35
+b111 $
+1'
+b11111111 (
+b11111111 "
+1%
+0!
+#40
+b11 &
+b11 #
+b11 $
+0'
+b11110111 (
+b11110111 "
+0%
+1!
+#45
+b111 $
+1'
+b11111111 (
+b11111111 "
+1%
+0!
+#50
+b100 &
+b100 #
+b100 $
+0'
+b11101111 (
+b11101111 "
+0%
+1!
+#55
+b111 $
+1'
+b11111111 (
+b11111111 "
+1%
+0!
+#60
+b101 &
+b101 #
+b101 $
+0'
+b11011111 (
+b11011111 "
+0%
+1!
+#65
+b111 $
+1'
+b11111111 (
+b11111111 "
+1%
+0!
+#70
+b110 &
+b110 #
+b110 $
+0'
+b10111111 (
+b10111111 "
+0%
+1!
+#75
+b111 $
+1'
+b11111111 (
+b11111111 "
+1%
+0!
+#80
+b111 &
+b111 #
+b111 $
+0'
+b1111111 (
+b1111111 "
+0%
+1!
+#82
