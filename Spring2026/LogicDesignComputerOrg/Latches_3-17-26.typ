@@ -14,8 +14,12 @@
 )
 
 = S-R Latch
-Created using two NOR gates. The first has inputs of R and the output of the
-other NOR gate, the second has inputs of S and the output of the other NOR
+The overall circuit has two inputs and two outputs
+- Inputs: S, R
+- Outputs: Q, QN
+
+Created using two NOR gates. The first has inputs of S and the output of the
+other NOR gate, the second has inputs of R and the output of the other NOR
 gate.
 
 #figure(
@@ -66,10 +70,11 @@ gate.
       dodge-y: -0.75,
     )
   }),
-  caption: "Circuit Diagram",
+  caption: "Circuit Diagram for S-R Latch",
 )
 
-It has two outputs, Q and QN, which should always be inverses.
+The output of the S NOR gate is Q, the output of the R NOR gate is QN. Q
+and QN should always be inverses.
 
 #figure(
   table(
@@ -156,6 +161,72 @@ and (R #sym.dot.op C).
 
 When enable is asserted, it acts as an S-R latch, when enable is not asserted,
 holds the last value at output.
+
+#figure(
+  circuiteria.circuit({
+    import circuiteria: *
+
+    element.block(
+      x: 0,
+      y: 0,
+      w: 2,
+      h: 2,
+      id: "block",
+      ports: (
+        west: ((id: "enable", name: "C"), (id: "set", name: "S"), (id: "reset", name: "R")),
+        east: ((id: "out0", name: "Q"), (id: "out1", name: "QN")),
+      ),
+    )
+    wire.stub("block-port-set", "west")
+    wire.stub("block-port-reset", "west")
+    wire.stub("block-port-enable", "west")
+    wire.stub("block-port-out0", "east")
+    wire.stub("block-port-out1", "east")
+  }),
+  caption: "Symbol for S-R Latch with Enable",
+)
+
+#figure(
+  circuiteria.circuit({
+    import circuiteria: *
+
+    gates.gate-and(x: 0, y: 0.25, w: 1, h: 1, id: "and0")
+    gates.gate-and(x: 0, y: -2.25, w: 1, h: 1, id: "and1")
+    gates.gate-nor(x: 2, y: 0, w: 1, h: 1, id: "nortop")
+    gates.gate-nor(x: 2, y: -2, w: 1, h: 1, id: "norbottom")
+    wire.stub("and0-port-in0", "west", name: "S", length: 1)
+    wire.stub("and1-port-in1", "west", name: "R", length: 1)
+    wire.stub("and0-port-in1", "west", name: "C", length: 1)
+    wire.stub("and1-port-in0", "west", name: "C", length: 1)
+    wire.stub("nortop-port-out", "east", name: "Q", length: 1)
+    wire.stub("norbottom-port-out", "east", name: "QN", length: 1)
+    wire.wire(
+      "ao0",
+      ("and0-port-out", "nortop-port-in0"),
+      style: "direct",
+    )
+    wire.wire(
+      "ao1",
+      ("and1-port-out", "norbottom-port-in1"),
+      style: "direct",
+    )
+    wire.wire(
+      "wQN",
+      ("norbottom-port-out", "nortop-port-in1"),
+      style: "dodge",
+      dodge-margins: (25%, 50%),
+      dodge-y: -0.25,
+    )
+    wire.wire(
+      "wQN",
+      ("nortop-port-out", "norbottom-port-in0"),
+      style: "dodge",
+      dodge-margins: (50%, 50%),
+      dodge-y: -0.75,
+    )
+  }),
+  caption: "Circuit Diagram",
+)
 
 S-R latches with enables are useful in control applications when setting a flag in response
 to a condition and resetting it when the condition goes away/changes.
