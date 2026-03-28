@@ -341,11 +341,13 @@ finite state machine is any sequential logic circuit with a finite number
 of states (crazy). If
 there are $n$ state bits, then there are $2^n$ possible states.
 
-A Mealy Machine is a finite state machine that depends on inputs and the
-current state (including the clock). i.e. $G(D, Q) = ...$
+A *Mealy* Machine is a finite state machine that has state and output
+equations that depend both on inputs and the
+current state. i.e. $G(D, Q) = ...$
 
-A Moore Machine is a finite state machine that depends on only the current
-state (and the clock). i.e. $G(Q) = ...$
+A *Moore* Machine is a finite state machine that has state and output
+equations that only depend on only the current
+state (not the inputs). i.e. $G(Q) = ...$
 
 = Designing a 2-Bit Counter
 
@@ -428,7 +430,3 @@ A digram of the state table
   ),
   caption: "State Assignment with Output",
 )
-
-We can now use K-Maps to find equations for $Q_1$, $Q_0$, and $M A X$.
-
-

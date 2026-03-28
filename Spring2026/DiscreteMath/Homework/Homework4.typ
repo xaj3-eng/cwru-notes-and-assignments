@@ -451,3 +451,6 @@
 
   If $n$ is odd, $4^n mod 10=4$, if $n$ is even, $4^n mod 10 = 6$
 ]
+
+
+
