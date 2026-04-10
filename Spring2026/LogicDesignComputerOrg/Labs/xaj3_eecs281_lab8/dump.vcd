@@ -1,0 +1,262 @@
+$date
+	Thu Apr  9 11:02:02 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module testbench_hw8 $end
+$var wire 3 ! r_lights [2:0] $end
+$var wire 3 " l_lights [2:0] $end
+$var reg 1 # clk $end
+$var reg 1 $ haz $end
+$var reg 1 % left $end
+$var reg 1 & right $end
+$var reg 1 ' rst_b $end
+$scope module UUT $end
+$var wire 1 # clk $end
+$var wire 1 $ haz $end
+$var wire 1 % left $end
+$var wire 1 & right $end
+$var wire 1 ' rst_b $end
+$var reg 3 ( l_lights [2:0] $end
+$var reg 3 ) r_lights [2:0] $end
+$var reg 3 * state [2:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+bx *
+bx )
+bx (
+1'
+0&
+0%
+0$
+0#
+bx "
+bx !
+$end
+#5
+1#
+#10
+b0 !
+b0 )
+b0 "
+b0 (
+b0 *
+0#
+0'
+#15
+1#
+#20
+0#
+#25
+1#
+#30
+0#
+1'
+#35
+1#
+#40
+0#
+#45
+1#
+#50
+0#
+1&
+#55
+b1 !
+b1 )
+b101 *
+1#
+#60
+0#
+#65
+b11 !
+b11 )
+b111 *
+1#
+#70
+0#
+#75
+b111 !
+b111 )
+b110 *
+1#
+#80
+0#
+#85
+b0 !
+b0 )
+b0 *
+1#
+#90
+0#
+1%
+0&
+#95
+b1 "
+b1 (
+b1 *
+1#
+#100
+0#
+#105
+b11 "
+b11 (
+b11 *
+1#
+#110
+0#
+#115
+b111 "
+b111 (
+b10 *
+1#
+#120
+0#
+#125
+b0 "
+b0 (
+b0 *
+1#
+#130
+0#
+1&
+0%
+#135
+b1 !
+b1 )
+b101 *
+1#
+#140
+0#
+1$
+0&
+#145
+b111 !
+b111 )
+b111 "
+b111 (
+b100 *
+1#
+#150
+0#
+0$
+#155
+b0 !
+b0 )
+b0 "
+b0 (
+b0 *
+1#
+#160
+0#
+1&
+#165
+b1 !
+b1 )
+b101 *
+1#
+#170
+0#
+#175
+b11 !
+b11 )
+b111 *
+1#
+#180
+0#
+1$
+0&
+#185
+b111 !
+b111 )
+b111 "
+b111 (
+b100 *
+1#
+#190
+0#
+0$
+#195
+b0 !
+b0 )
+b0 "
+b0 (
+b0 *
+1#
+#200
+0#
+1%
+#205
+b1 "
+b1 (
+b1 *
+1#
+#210
+0#
+1$
+0%
+#215
+b111 !
+b111 )
+b111 "
+b111 (
+b100 *
+1#
+#220
+0#
+0$
+#225
+b0 !
+b0 )
+b0 "
+b0 (
+b0 *
+1#
+#230
+0#
+1%
+#235
+b1 "
+b1 (
+b1 *
+1#
+#240
+0#
+#245
+b11 "
+b11 (
+b11 *
+1#
+#250
+0#
+1$
+0%
+#255
+b111 !
+b111 )
+b111 "
+b111 (
+b100 *
+1#
+#260
+0#
+0$
+#265
+b0 !
+b0 )
+b0 "
+b0 (
+b0 *
+1#
+#270
+0#
