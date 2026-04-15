@@ -1,3 +1,5 @@
+#import "@preview/cetz:0.4.2"
+#import "@preview/cetz-plot:0.1.3": plot
 #import "@local/xnotes:1.0.2": *
 #show: doc => xnote(doc)
 #set page(height: auto)
@@ -6,9 +8,9 @@
 
 = 1. Slab Space Saving
 
-#align(center)[*Final Answer: 41.32 MB*]
+#align(center)[*Final Answer: 2.831 GB*]
 
-#aside[I assumed that pages were 4096 bits or 512 bytes]
+#aside[I assumed that pages were 4096 bytes]
 
 To calculate the space saved by using the slab allocator as opposed to
 using a minimum of one page per object, we must calculate both the number of pages used by the slab allocator, and the number of pages that we would have used with normal paging.
@@ -28,10 +30,10 @@ per object. We then sum the corresponding values for every object.
 
 $
   "Pages Allocated with Per Object Paging" = sum ("Pages/Object" dot
+    "Number of Objects") \
+  = sum (ceil("Object Size"/"Page Size") dot
     "Number of Objects")
 $
-
-#aside[Note: $"Pages/Object"$ could be calculated using $ceil("Object Size" / "Page Size")$. However, this value is also given in the slab info, `pagesperslab`, which is the value my awk scripts will use.]
 
 We can then take the difference and multiply by the page size to find the total space saved:
 
@@ -46,10 +48,9 @@ $
 
   # Number of Objects: $3
   # Object Size: $4
-  # Pages per Slab: $6
 
   BEGIN {
-    PAGE_SIZE = 512;
+    PAGE_SIZE = 4096;
   }
 
   function ceil(x) {
@@ -58,7 +59,7 @@ $
 
   {
     current_slab_alloc_pages = ceil(($3 * $4) / PAGE_SIZE)
-    current_perobj_pages = $6 * $3
+    current_perobj_pages = ceil($4 / PAGE_SIZE) * $3
 
     slab_alloc_pages += current_slab_alloc_pages
     perobj_pages += current_perobj_pages
@@ -82,15 +83,15 @@ used the following command to compute the output: #box(outset: 3pt, fill: rgb("e
 
 #figure(caption: [Question 1. awk Script Output])[
   ```txt
-  Pages used with Slab Allocator: 659862
-  Pages used with Per Object Paging: 1466936
-  Pages Saved with Slab Allocator: 807074
-  Page Size (in bytes): 512
-  Space Saved (in bytes): 413221888
+  Pages used with Slab Allocator: 82497
+  Pages used with Per Object Paging: 773650
+  Pages Saved with Slab Allocator: 691153
+  Page Size (in bytes): 4096
+  Space Saved (in bytes): 2830962688
   ```
 ]
 
-The amount of space saved using slabs was *413221888 bytes*, or *41.32 MB*.
+The amount of space saved using slabs was *2830962688 bytes*, or *2.831 GB*.
 
 #pagebreak()
 
@@ -111,99 +112,7 @@ Prioritize simplicity, no comments or testing.
 I requested no comments or testing, so that I could introduce print
 statements and testing myself. This is what was generated:
 
-#figure(caption: [`q2.c`])[
-  ```c
-  #include <stdbool.h>
-  #include <stdint.h>
-  #include <stdio.h>
-  #include <stdlib.h>
-
-  #define HEAP_SIZE 256
-  #define MAX_ORDER 8
-  #define LEVELS 9
-
-  typedef struct Node {
-      uint8_t addr;
-      struct Node *next;
-  } Node;
-
-  Node *free_lists[LEVELS];
-  uint8_t alloc_order[HEAP_SIZE];
-
-  void fl_push(int order, uint8_t addr) {
-      Node *n = malloc(sizeof(Node));
-      n->addr = addr;
-      n->next = free_lists[order];
-      free_lists[order] = n;
-  }
-
-  uint8_t fl_pop(int order) {
-      Node *n = free_lists[order];
-      uint8_t addr = n->addr;
-      free_lists[order] = n->next;
-      free(n);
-      return addr;
-  }
-
-  bool fl_remove(int order, uint8_t addr) {
-      Node **cur = &free_lists[order];
-      while (*cur) {
-          if ((*cur)->addr == addr) {
-              Node *tmp = *cur;
-              *cur = tmp->next;
-              free(tmp);
-              return true;
-          }
-          cur = &(*cur)->next;
-      }
-      return false;
-  }
-
-  uint8_t balloc(size_t size) {
-      int order = 0;
-      while ((1 << order) < (int)size) order++;
-
-      int found = -1;
-      for (int i = order; i < LEVELS; i++) {
-          if (free_lists[i]) { found = i; break; }
-      }
-      if (found == -1) return 0xFF;
-
-      uint8_t addr = fl_pop(found);
-      while (found > order) {
-          found--;
-          fl_push(found, addr + (1 << found));
-      }
-
-      alloc_order[addr] = order;
-      return addr;
-  }
-
-  void bfree(uint8_t addr) {
-      int order = alloc_order[addr];
-      while (order < MAX_ORDER) {
-          uint8_t buddy = addr ^ (1 << order);
-          if (!fl_remove(order, buddy)) break;
-          if (buddy < addr) addr = buddy;
-          order++;
-      }
-      fl_push(order, addr);
-  }
-
-  void init() {
-      for (int i = 0; i < LEVELS; i++) free_lists[i] = NULL;
-      fl_push(MAX_ORDER, 0);
-  }
-
-  int main(void) {
-      init();
-
-      return EXIT_SUCCESS;
-  }
-  ```
-]
-
-This code has two main methods: `balloc` and `free`, as well as one
+The code has two main methods: `balloc` and `free`, as well as one
 important data structure, the array of free lists.
 - The array of free lists stores one free list for every 'level' of the
   buddy allocation.
@@ -216,7 +125,7 @@ important data structure, the array of free lists.
   address as a 1 byte integer.
 - `bfree` takes an address, and searches all of the levels for a block with
   that address to mark that block as free. Once it finds and marks a block
-  as free, it will check the block's buddy (the block at `addr XOR order`),
+  as free, it will check the block's buddy (the block at `address XOR 2^order`),
   and if it is free, it will merge them. It will then check the merged
   block's buddy to merge and so on.
 
@@ -227,10 +136,112 @@ statements for the following events:
 - Whenever blocks are merged
 - Whenever blocks are merged
 - Whenever I call `print_flists`, which will print all of the available
-  blocks:
+  blocks
 
-#figure(caption: [`print_flists` method])[
+#figure(caption: [Final `q2.c` file, pre-testing])[
   ```c
+  #include <stdbool.h>
+  #include <stdint.h>
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <sys/types.h>
+
+  #define HEAP_SIZE 256
+  #define MAX_ORDER 8
+  #define LEVELS 9
+
+  typedef struct Node {
+    uint8_t addr;
+    struct Node *next;
+  } Node;
+
+  Node *free_lists[LEVELS];
+  uint8_t alloc_order[HEAP_SIZE];
+
+  void fl_push(int order, uint8_t addr) {
+    Node *n = malloc(sizeof(Node));
+    n->addr = addr;
+    n->next = free_lists[order];
+    free_lists[order] = n;
+  }
+
+  uint8_t fl_pop(int order) {
+    Node *n = free_lists[order];
+    uint8_t addr = n->addr;
+    free_lists[order] = n->next;
+    free(n);
+    return addr;
+  }
+
+  bool fl_remove(int order, uint8_t addr) {
+    Node **cur = &free_lists[order];
+    while (*cur) {
+      if ((*cur)->addr == addr) {
+        Node *tmp = *cur;
+        *cur = tmp->next;
+        free(tmp);
+        return true;
+      }
+      cur = &(*cur)->next;
+    }
+    return false;
+  }
+
+  uint8_t balloc(size_t size) {
+    int order = 0;
+    while ((1 << order) < (int)size)
+      order++;
+
+    int found = -1;
+    for (int i = order; i < LEVELS; i++) {
+      if (free_lists[i]) {
+        found = i;
+        break;
+      }
+    }
+    if (found == -1) {
+      // My Addition
+      printf("Error: Not enough space for attempted allocation of size %ld\n",
+             size);
+      return 0xFF;
+    }
+
+    uint8_t addr = fl_pop(found);
+    while (found > order) {
+      int prev = found;
+      found--;
+      // My Addition
+      printf("- Splitting size %d block into size %d blocks\n", 1 << prev,
+             1 << found);
+      fl_push(found, addr + (1 << found));
+    }
+    // My Addition
+    printf("Allocation of size %ld: Using a block with size %d (addr: %d)\n",
+           size, 1 << order, addr);
+
+    alloc_order[addr] = order;
+    return addr;
+  }
+
+  void bfree(uint8_t addr) {
+    int order = alloc_order[addr];
+    while (order < MAX_ORDER) {
+      uint8_t buddy = addr ^ (1 << order);
+      if (!fl_remove(order, buddy))
+        break;
+      if (buddy < addr)
+        addr = buddy;
+      order++;
+      // My Addition
+      printf("- Merging size %d blocks into a size %d block\n", 1 << (order - 1),
+             1 << order);
+    }
+    // My Addition
+    printf("Freeing address %d; Block of size %d regained\n", addr, 1 << order);
+    fl_push(order, addr);
+  }
+
+  // My Addition
   void print_flists() {
     printf("---- Available Blocks ----\n");
     for (int i = MAX_ORDER; i >= 0; i--) {
@@ -245,6 +256,12 @@ statements for the following events:
       }
     }
     printf("\n");
+  }
+
+  void init() {
+    for (int i = 0; i < LEVELS; i++)
+      free_lists[i] = NULL;
+    fl_push(MAX_ORDER, 0);
   }
   ```
 ]
@@ -363,13 +380,236 @@ Here is a test main function that I wrote and its corresponding output:
 
 = 3. The Effect of Kernel Parameters
 
+#aside[Note: I apologize, I really struggled to get good data for this
+  question. I have had a bunch of conversations with Claude about why the
+  parameters weren't having a significant effect, and I'm still not sure I
+  understand completely. Details below]
 
+For this problem, I began by logging into my root machine and running the
+following command to ensure that the parameters for `swappiness`,
+`user_reserve_kbytes`, and `vfs_cache_pressure` were set to their defaults:
+
+```bash
+sudo sysctl -w vm.swappiness=10 -w vm.user_reserve_kbytes=63201 -w vm vfs_cache_pressure=50
+```
+
+I then ran 5 `mempig`s in the background, waited 20 seconds, and then
+stored the `top` data, including the statistics about `Swap`, `Mem`, and
+`buff/cache`. I did this using the following bash script:
+
+#figure(caption: [`generate_top.bash`])[```bash
+  #!/usr/bin/env bash
+
+  ./mempig &
+  mempid1=$!
+  ./mempig &
+  mempid2=$!
+  ./mempig &
+  mempid3=$!
+  ./mempig &
+  mempid4=$!
+  ./mempig &
+  mempid5=$!
+
+  sleep 20
+
+  top -b -n 1 > $1
+  kill "$mempid1"
+  kill "$mempid2"
+  kill "$mempid3"
+  kill "$mempid4"
+  kill "$mempid5"
+  ```
+]
+
+#aside[Note: I used the same `mempig` C program that you used in you Tuesday
+  Demo #10.]
+
+I then changed the parameters, and ran the script again, repeating ten
+times with different parameter combinations each time. Here are the
+combinations I used:
+
+#columns(2)[
+  - "default_params":
+    - `vm.swappiness=10`
+    - `vm.user_reserve_kbytes=63201`
+    - `vfs_cache_pressure=50`
+  - "swappiness=1":
+    - `vm.swappiness=1`
+    - `vm.user_reserve_kbytes=63201`
+    - `vfs_cache_pressure=50`
+  - "swappiness=100":
+    - `vm.swappiness=100`
+    - `vm.user_reserve_kbytes=63201`
+    - `vfs_cache_pressure=50`
+  - "10x_user_reserve":
+    - `vm.swappiness=10`
+    - `vm.user_reserve_kbytes=632010`
+    - `vfs_cache_pressure=50`
+  - "10xless_user_reserve":
+    - `vm.swappiness=10`
+    - `vm.user_reserve_kbytes=6320`
+    - `vfs_cache_pressure=50`
+
+
+  #colbreak()
+  - "cache_pressure=5":
+    - `vm.swappiness=10`
+    - `vm.user_reserve_kbytes=63201`
+    - `vfs_cache_pressure=5`
+  - "cache_pressure=500":
+    - `vm.swappiness=10`
+    - `vm.user_reserve_kbytes=63201`
+    - `vfs_cache_pressure=500`
+  - "10x_everything":
+    - `vm.swappiness=100`
+    - `vm.user_reserve_kbytes=632010`
+    - `vfs_cache_pressure=500`
+  - "10xless_everything":
+    - `vm.swappiness=1`
+    - `vm.user_reserve_kbytes=6320`
+    - `vfs_cache_pressure=5`
+  - "swap=1_reserve=10x_pressure=5":
+    - `vm.swappiness=1`
+    - `vm.user_reserve_kbytes=632010`
+    - `vfs_cache_pressure=5`
+]
+
+First I will look at the Swap statistics in top with respect to the kernel
+parameters. In all of the trials, the load started at approximately 0.3MB
+swapped out before running the `mempigs`. Here is the data after running the
+`mempigs`:
+
+
+#figure(
+  table(
+    columns: 3,
+    stroke: none,
+    align: center,
+    [Parameter Combination], table.vline(), [Total RAM (MiB)], table.vline(), [Swap Used (MiB)],
+    table.hline(),
+    [10x\_everything], [4096.0], [2469.2],
+    [10x\_user\_reserve], [4096.0], [2462.7],
+    [10xless\_everything], [4096.0], [2460.4],
+    [10xless\_user\_reserve], [4096.0], [2456.3],
+    [cache\_pressure=5], [4096.0], [2475.1],
+    [cache\_pressure=500], [4096.0], [2465.1],
+    [default\_params], [4096.0], [2460.3],
+    [swap=1\_reserve=10x\_pressure=5], [4096.0], [2477.7],
+    [swappiness=1], [4096.0], [2462.3],
+    [swappiness=100], [4096.0], [2462.6],
+  ),
+  caption: [Swap Usage by Parameter Combination],
+)
+
+#aside[I didn't make a plot of swap usage; I think the plot would've been pretty boring since the swap usage stayed very consistent throughout the parameter changes.]
+
+`vm.swappiness` is a kernel parameter that changes how agressively/frequently the OS moves inactive data onto the disk. You'll notice that all of the parameter combinations are very similar in their swap usage.
+Initially, I thought that I had made a mistake with how I changed
+`vm.swappiness` and I spent some time
+looking into it. However, now I
+believe that this occurred because the RAM was completely filled, so the OS
+had no choice but to swap out regardless of the swappiness. Here are some
+statistics on the RAM being completely utilized to back up this theory:
+
+#figure(
+  table(
+    columns: 3,
+    stroke: none,
+    align: center,
+    [Parameter Combination], table.vline(), [Total RAM (MiB)], table.vline(), [RAM Used (MiB)],
+    table.hline(),
+    [10x\_everything], [1971.3], [1833.1],
+    [10x\_user\_reserve], [1971.3], [1837.4],
+    [10xless\_everything], [1971.3], [1846.6],
+    [10xless\_user\_reserve], [1971.3], [1843.8],
+    [cache\_pressure=5], [1971.3], [1825.5],
+    [cache\_pressure=500], [1971.3], [1838.6],
+    [default\_params], [1971.3], [1839.1],
+    [swap=1\_reserve=10x\_pressure=5], [1971.3], [1825.5],
+    [swappiness=1], [1971.3], [1840.0],
+    [swappiness=100], [1971.3], [1839.7],
+  ),
+  caption: [RAM Usage by Parameter Combination],
+)
+
+Now let's look at disk cache usage with respect to `vfs_cache_pressure`.
+
+`buff/cache` is a statistic in `top` that shows how much RAM is being used as disk
+cache, and `vfs_cache_pressure` is a parameter that controls how
+aggressively/frequently the OS will switch out data in the cache. My hypothesis was the following: a higher
+`vfs_cache_pressure` value should result in the cache being cleared more
+often, meaning less disk cache and less `buff/cache`. Here is the data:
+
+#figure(
+  table(
+    columns: 3,
+    stroke: none,
+    align: center,
+    [Parameter Combination], table.vline(), [`vfs_cache_pressure`], table.vline(), [`buff/cache`],
+    table.hline(),
+    [10x_everything], [500], [62.7 MB],
+    [10x_user_reserve], [50], [53.3 MB],
+    [10xless_everything], [5], [56.4 MB],
+    [10xless_user_reserve], [50], [56.2 MB],
+    [cache_pressure=5], [5], [67.4 MB],
+    [cache_pressure=500], [500], [58.5 MB],
+    [default_params], [50], [56.4 MB],
+    [swap=1_reserve=10x_pressure=5], [5], [63.4 MB],
+    [swappiness=1], [50], [54.3 MB],
+    [swappiness=100], [50], [52.5 MB],
+  ),
+  caption: [`vfs_cache_pressure` vs. `buff/cache`],
+)
+
+#figure(caption: [`vfs_cache_pressure` vs. `buff/cache`])[
+  #cetz.canvas({
+    plot.plot(
+      size: (10, 6),
+      axis-style: "scientific-auto",
+      x-label: [`vfs_cache_pressure`],
+      y-label: [ `buff/cache (MB)` ],
+      x-min: 0,
+      x-max: 550,
+      y-min: 40,
+      y-max: 80,
+      x-tick-step: 50,
+      y-tick-step: 5,
+      {
+        plot.add(
+          (
+            (500, 62.7),
+            (50, 53.3),
+            (5, 56.4),
+            (50, 56.2),
+            (5, 67.4),
+            (500, 58.5),
+            (50, 56.4),
+            (5, 63.4),
+            (50, 54.3),
+            (50, 52.5),
+          ),
+          mark: "o",
+          style: (stroke: none, fill: blue),
+        )
+      },
+    )
+  })
+]
+
+Althought this data is relatively inconsistent, I find it interesting because when the `vfs_cache_pressure` is low, there is a lot of memory
+being used as disk cache. I believe that this is because the cache is being cleared
+infrequently. However, when `vfs_cache_pressure` is really high, there is
+also more memory being used as disk cache than a medium
+`vfs_cache_pressure`. I believe that this is because data is
+being moved into and out of the cache so quickly, that more RAM is being
+used as disk cache.
 
 #pagebreak()
 
 = 4. The Future of OS Textbooks (ft. Claude)
 
-Summary of conversation with Claude:
+Summary of my conversation with Claude:
 - We discussed how modern OS is focused on the cache
 - I learned what asymmetric multiprocessing is
 - We discussed how Best/Worst/First/etc. Fit aren't actually used
@@ -524,3 +764,30 @@ Summary of conversation with Claude:
 
     Your professor seems to have a coherent philosophy: move from idealized, simplified systems toward practical, real-world concerns. Sounds like a good OS course.]
 ]
+
+#pagebreak()
+
+= Snapshot Values cause Plane Crashes
+
+_According to Claude..._
+
+*Boeing 737 MAX MCAS Crash (2018 & 2019)*
+- A faulty sensor tricked the plane's computer into repeatedly pushing the
+  nose down, and the system never bothered checking the other sensors to see
+  if the reading made sense.
+- This caused two crashes that killed 346 people.
+- The sensor was giving a single bad reading.
+
+*B-2 Spirit Crash (2008)*
+- Rain got into three of the plane's 24 sensors right before takeoff,
+  causing the computer to violently pitch the nose up at the worst possible
+  moment.
+- The \$1.4 billion plane crashed, even 21 remaining sensors were working
+  perfectly fine.
+
+*Boeing 757 Crash (1996)*
+- Two planes crashed the same year because sensors blocked by a wasp nest
+  fed the autopilot false data, causing it to pull the nose up until the
+  planes stalled.
+- In both cases, other sensors were showing completely different numbers,
+  but nothing in the system was designed to notice the difference.

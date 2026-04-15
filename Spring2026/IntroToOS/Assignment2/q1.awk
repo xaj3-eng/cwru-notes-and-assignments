@@ -5,7 +5,7 @@
 # Pages per Slab: $6
 
 BEGIN {
-  PAGE_SIZE = 512;
+  PAGE_SIZE = 4096;
 }
 
 function ceil(x) {
@@ -13,8 +13,9 @@ function ceil(x) {
 }
 
 {
+  printf("- %d, %d, %d\n", $3, $4, $6);
   current_slab_alloc_pages = ceil(($3 * $4) / PAGE_SIZE)
-  current_perobj_pages = $6 * $3
+  current_perobj_pages = ceil($4 / PAGE_SIZE) * $3
 
   slab_alloc_pages += current_slab_alloc_pages
   perobj_pages += current_perobj_pages
