@@ -352,3 +352,87 @@
   => (P(B | A) P (A)) / (P(A)) = P(B)
   , space (P(A | B) P (B)) / (P(B)) = P(B) \
   => #conclusion[$P(B | A) = P(B), P(A | B) = P(A)$]$
+
+#pagebreak()
+
+= Additional Questions
+
+== Blue and Gray Dice:
+
+#align(center)[
+  #columns(2)[
+    \# Rolls with Sum of 6: *5*
+    #columns(2)[
+      - {#text(blue)[1], #text(gray)[5]}
+      - {#text(blue)[2], #text(gray)[4]}
+      - {#text(blue)[3], #text(gray)[3]}
+      #colbreak()
+      - {#text(blue)[4], #text(gray)[2]}
+      - {#text(blue)[5], #text(gray)[1]}
+    ]
+
+    $P("Sum = 6")=5/36$
+
+    #colbreak()
+
+    \# Rolls with Both Odds: *9*
+    #columns(2)[
+      - {#text(blue)[1], #text(gray)[1]}
+      - {#text(blue)[1], #text(gray)[3]}
+      - {#text(blue)[1], #text(gray)[5]}
+      - {#text(blue)[3], #text(gray)[1]}
+      - {#text(blue)[3], #text(gray)[3]}
+      #colbreak()
+      - {#text(blue)[3], #text(gray)[5]}
+      - {#text(blue)[5], #text(gray)[1]}
+      - {#text(blue)[5], #text(gray)[3]}
+      - {#text(blue)[5], #text(gray)[5]}
+    ]
+
+    $P("Both Odd") = 9/36 = 1/4$
+  ]
+
+  \# Rolls with Sum of 6 and Both Odds: *3*
+  #columns(3)[
+    - {#text(blue)[1], #text(gray)[5]}
+    #colbreak()
+    - {#text(blue)[3], #text(gray)[3]}
+    #colbreak()
+    - {#text(blue)[5], #text(gray)[1]}
+  ]
+
+
+]
+
+$
+  P("Sum = 6" inter "Both Odd") = 3/36 = 1/12 \
+  =>P("Sum = 6" | "Both Odd") = P("Sum = 6" inter "Both Odd") /
+  (P("Both Odd")) \
+  #final_answer[$P("Sum = 6" | "Both Odd") (1/12)/(1/4) = 1/3$]
+$
+
+== 98% Accurate Drug Test:
+
+We are trying to find $P("Drug User" | "Positive Test")$
+
+- Bayes' Formula: $P (B | A) P (A) = P (A | B) P (B) = P (A inter B)$
+
+$
+  & => P("Drug User" | "Positive Test") dot P("Positive Test") = P("Positive Test"
+      | "Drug User") dot P("Drug User") \
+  & => P("Drug User" | "Positive Test") = (P("Positive Test" | "Drug User")
+    dot P("Drug User"))/(P("Positive Test"))
+$
+
+- $P("Positive Test" | "Drug User") = 98% = 0.98$
+- $P("Drug User") = 0.5% = 0.005$
+- $P("Positive Test") = 0.5% dot 98% + 99.5% dot 2% = 2.48% = 0.0248$
+
+#final_answer[
+  $
+    => P("Drug User" | "Positive Test") = (0.98 dot 0.005)/
+    (0.0248) = 49/248 approx 0.198
+  $
+]
+
+
