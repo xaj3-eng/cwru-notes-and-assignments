@@ -1,5 +1,6 @@
 #import "@local/xnotes:1.0.2": *
 #show: doc => xnote(doc)
+#set page(height: auto)
 
 #title[Microcontrollers]
 
@@ -81,4 +82,62 @@ loop:
   rlf     PORTB;
   goto    loop;
 end
+```
+
+#example[6 bit output]
+
+#aside[Note that nibbles are sets of 4 bits, and `SWAPx` swaps nibbles
+  (bits 7-4 with 3-0)]
+
+```asm
+  main:
+  ; PORT Config
+    bsf   STATUS, RP0; Switch to bank 1
+    movlw 0xC0;
+    movwf TRISB; Set direction of PORTB to 11000000 (2 input, 6 output)
+    bcf   STATUS, RP0;
+
+  ; Initialization
+    clrf  PORTB; (Only affects the output bits because the input bits will
+              ; still be inputs)
+    clrf  ctr;  Clear a counter variable
+
+  mloop:
+    ; Move the counter to RB 2-0 (W 2-0)
+    movf  PORTB, w; (w is an alias for 0, 0 means move to w)
+    andlw 0xF8; Essentially clears the last 3 bits of W
+    iorfw ctr; Puts the counter in the last 3 bits of W
+
+    ; Compute the Sum
+    clrf  sum;
+    btfsc ctr, 0;  If the bit is cleared...
+    incf  sum, f; (1 means move back into f, f is an alias for 1)
+    btfsc ctr, 1; repeat for bits 1 and 2
+    incf  sum, f;
+    btfsc ctr, 2;
+    incf  sum, f;
+
+    ; Write the sum to RB 5-4
+    swapf sum, f; (f means mov back to same file)
+    movf  PORTB, w;
+    andlw 0xCF; Clear bits 4 and 5 from W
+    iorwf sum, w; Set sum bits to W 4 and 5
+    movwf PORTB;
+
+    ; Compare the input with the current sum
+    bcf   STATUS, C;
+    rlf   sum, f;
+    rlf   sum, f;
+    movf  PORTB, w;
+    andlw 0xC0;
+    xorwf sum, w;
+    btfss STATUS, z; If z=1, it means current sum = input
+    goto  L1;
+    bcf   PORTB, 3;
+    goto L2;
+  L1: bsf PORTB, 3;
+  L2:
+
+
+
 ```
