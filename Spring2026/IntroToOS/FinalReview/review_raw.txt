@@ -1,0 +1,325 @@
+OS::the control interface of a programmable device, including the hardware/software bridge, or these days the bridge between the software that controls the device, and the software that abstracts the device; the monitor or supervisor; some say the software that controls resources and resource contention
+CLI::the command line interface of an OS, usually a shell such as bash in a *nix
+bare metal::a system where the OS is running natively, not mediated by a (significant) emulator or virtualization
+virtual machine::a system where the OS is not running in bare metal
+virtual desktop::a kind of virtualization where the desktop functions are provided as if they were native
+server::a system where the intented users are mediated by the internet, esp for web serving static and dynamic data (server-side computation) to clients
+ssh::secure shell program used to interact with the cli of a *nix server
+w::the what command:  show who is logged on and what they are doing (should you see this?)
+jobs::show jobs launched from this login, or shell, non-terminated
+ps::show processes, which includes options to see all, or all for a specific user (cf. man ps, ps -e, ps -u www-data)
+vi::the original *nix editor, see also vim (bloated), nano ok for this class, vi for power users
+man::a command to show the manual page of a command in *nix; does not include shell built-ins; can be hard to read, written as a reference not a how-to; ok to use google and chat these days for man page sorts of help
+tab-completion::in most shells, tab will suggest or default complete the command or file name (some contexts does not apply)
+hidden file::in most shells, ls will not list files beginning with ., but ls -a will; vi .swp files are hidden for example
+file extensions::such as .txt, not needed in *nix but sometimes used; optional; linux applies methods to objects, does not define objects as having methods
+linux commands::ls (know the options), mv, rm, mkdir, cd, cp, kill -9 %1, killall a.out, kill -9 12223, ctrl-Z, ctrl-C, fg, bg, ./a.out & (starts as a background process)
+cc::the c compiler aka gcc, creates a a.out binary by default, which has x permission, allowing ./a.out execution at cli
+main::the main function in a c program, after declarations, includes, and functions (or their prototypes)
+live-boot::usually usb into linux, a session where the OS image (an "ISO" 9660 cd/dvd formatted file) is read-only and occupies ram, not disk; often with no persistence layer
+secondary storage::usually a disk, attached ssd or hdd, or removable pen/thumb drive, but also includes network attached storage (NAS), cloud storage, tape archive, anything nonvolatile
+nonvolatile RAM::rare primary storage that persists after power loss or powerdown (for how long?); probably an infosec liabilty
+CPU::a processing unit which might have multiple cores
+core::a single processing device which might have hyperthreaded trickery, aka a 1-core cpu
+cpu scaling::hardware per-cpu clock rate dynamism that allows cooling and faster/slower processing, sw or hw controlled, see also modern big/little heterogeneous architectures (non smp, non-symmetric multiprocessing)
+DRAM::dynamic random access memory, 2-16GB
+zram::linux compressed DRAM, often 3:1 compression; takes DRAM and CPU to use zram
+ramdisk::part of RAM mounted like an SSD or HDD
+registers::few, about 8 or 16, close to cpu, fast (actual cpu registers number in the hundreds but are not general purpose integers)
+cache::the fast memory that dominates performance of a system these days; it had been DRAM; managed mainly by hardware, but sometimes OS can (indirectly?) prefetch, but not pin lines, like locking pages in memory
+L0 cache::if there is one, 128bits, like a register
+L1 cache::fast cache, i for instructions, d for data, 2-64kB, 64byte cache lines, so 1000 entries
+L2 cache::maybe shared by cores, 256-512kB
+L3 cache::more like fast DRAM, 1-8MB
+device driver::low level software (c or c++) written by hardware vendors that allow generic OS interfaces to the hardware; typically security holes, see cve/cwe (common vulnerability/weakness enumerations)
+tps::in iostat, transfers/sec which looks like transactions/sec (not a big deal); example of things we care about in OS
+protection::typically memory protection which prevents a user from looking at another user's memory, or a user from using memory in the wrong way, cf. stack smashing, segmentation fault; boomer ideas about security as os-survival, but not actual infosec; example of things we care about in OS
+journaling::a general idea for managing a file system where metadata is written separately, often first, before data, so file system consistency can be achieved quickly after failure (typically power loss); example of things we care about in OS
+program::executable binary or compilable/interpretable ascii text
+process::in linux, minimum schedulable entity, with a pid and ppid, subdir in /proc, also a program being executed in a state (e.g., running, ready, waiting)
+thread::in linux, a process belonging to a thread group, with a tgid
+job::a program launched at the cli, or an app from the user's point of view
+job::a single-task batch job in older system
+task::a process, thread, or job, almost deliberately ambiguous
+process status::one of D,R,S,T,t,Z, but also could include flags, fg/bg status, etc.
+process control block::information stored on a context switch, including pc, registers, files, etc., most of what is in /proc/pid
+context switch (cs)::when a process is moved on or off a core
+migration::when a process is moved to a different core
+voluntary cs::when a process relinquishes the cpu because of i/o or similar stall
+involuntary cs (intr)::when a process is removed but not because it was a voluntary cs, e.g., time slice expiry
+time slice::current allotment on the core that is running a process, aka time quantum
+cooperative multitasking::all cs's are voluntary
+noncooperative multitasking::cs may be involuntary:  preempted task
+multiprocessing::ambiguous, but mostly multi-core computing
+multitasking::somewhat ambiguous, mostly means concurrent or parallel processing (ie, not single job batch)
+parallel processing::using two cores or more at once, wrt wall clock time
+concurrent processing::using at least one core to simulate parallel processing using timeslices, but could include actual parallel processing, or a mix
+multiuser::a system processing tasks associated with multiple users, almost always human, since the normal single user system runs processes under different user ids (uids, e.g. root)
+long-term scheduler::admits jobs into the short-term scheduler
+short-term scheduler::decides which process runs next on each core
+dispatcher::ambiguous, usually the long-term scheduler
+ready state::a process in the ready queue, ready to run on a core
+running state::a process running on a core, typically with an expiring time quantum
+load::a 1-min, 5-min, and 10-min avg of number of processes in the running or ready state; note more cores, lower load for same job mix; more cores, more load for same latency; load of 4+ per core is a medium load
+waiting state::a process no longer running on a core, waiting for an event, typically completion of i/o, possibly queued for i/o
+sleeping state::a process possibly waiting, possibly put to sleep by user or system
+suspended state::a process interrupted by user typically, waiting in background
+backgrounded process::a process running in the background, not suspended, but possibly resumed in the bg after suspension from the fg, can output but not receive input from terminal
+daemon::system processes running in the background (without a terminal for input or output, or without the primary attention of a terminal)
+systemd::typically the pid 1 parent of all system processes, but could be pid > 1000 representing each user login
+orphan::a process whose original ppid has terminated, so its ppid is assigned to systemd
+zombie::a process whose parent has not noticed its (child's) termination, and is waiting to be removed from the system's process table
+wait::explicitly suspends the parent process at a line in code until the child/children terminate/signal
+SIGTERM::sends a signal to a process to terminate elegantly
+SIGKILL::sends a signal to a process to terminate immediately
+SIGINT::the interrupt signal sent by ctrl-c at the terminal
+SIGSTOP::the suspend signal sent by ctrl-z at the terminal
+SIGCONT::the signal sent to a process to resume, typically used by bg to resume in the background (no terminal input, but usually terminal output), or fg to resume in the foreground (both input and output with terminal/tty)
+k...d::a kernel daemon
+kernel::ambiguous, the space, the mode, the classification of process or system interface
+kernel space::the space used by the kernel not accessible by the user program, typically high 1gb in a 32-bit system
+kernel mode::an often hardware-assisted mode of the cpu where it can perform kernel tasks
+kernel call::a low-level routine that runs in kernel mode
+system call::ambiguous, typically a call that switches from user mode to kernel mode
+system process::ambiguous, typically a process associated with the proper functioning of the system (must a server be running sshd?  must a webserver be running apached or equivalent?)
+kernel process::a process that starts in kernel mode and stays in kernel mode
+microkernel::an architectural paradigm where as little as possible is done in the kernel; slower, but has security and correctness advantages
+monolithic kernel::the opposite of a microkernel, where a lot of system functions take place in kernel mode
+root::a privileged user in linux
+rwx::read, write, and execute privileges, also s for shared p for private in memory maps
+malloc::a c lib function that calls system brk or mmap functions to create heap space
+eager vs lazy::refers to a system doing immediately vs delaying an action, cf. copy on write; malloc is an example where addresses are typically not given until assignment
+memory map::a listing of virtual address memory areas or segments, aka virtual addresses ("virtual memory" very ambiguous), memory addresses from the process' point of view (prior to mapping/relocating to actual memory), know 32-bit from 64-bit, bf vs ff prefix
+aslr::address space layout randomization of offsets
+cat::at cli, show the file as ascii/printable text; tac will reverse it; shuf will randomize it; more, less, head, and tail also useful as downstream pipes, see also tail -f, tail -n +2, watch -n 1 "tail -10 fname"
+pipe::in cli, a way of taking output from one process and feed it to another, in serial/sequential/linear fashion; a form of inter-process communication (ipc); see also stdin, stdout, stderr
+hexdump::a way of looking at a file in hexadecimal values, esp when non-ascii or non-printable ascii chars are involved
+objdump::a way of disassembling or otherwise inspecting an executable binary to recover x86 instructions
+strace and ltrace::show system calls and library calls during the live execution of a process
+srand::example of a c lib call that seeds the pseudo-random number generator
+truncate::example of a syscall which can be called by a user to invoke kernel functionality; kernel fns called by truncate might include:  sys_truncate(), do_truncate(), vfs_truncate(), inode_operations->truncate(), truncate_pagecache(), truncate_inode_pages()
+sleep::another c lib call which then uses syscall nanosleep(), which invokes the kernel fns do_nanosleep(), schedule_hrtimeout(); hr=high resolution
+code::in a memory map, where the r-x binary resides, aka text
+text::maybe just the binary executable code, but maybe also the constant, initialized, and bss parts of a binary, too; rw- and r-- segments are comparable but not 1-to-1
+heap::any of the possibly noncontiguous heap segments, usually created through malloc or similar; note this is shared across sibling threads, so essentially is shared memory (shm) for the thread group, badly named for dynamic user mempool because it is not managed like a tree data structure
+stack::the call stack, containing user and system functions and the actual parameters
+.so::typically a shared object library segment between heap and stack
+static::not dynamic, not writeable, but beware static pointers in c refer to data, not just pointer address as a data type
+char::the typical 1-byte data type in c; cf. strings as NULL-terminated contiguous chars with a head pointer
+buffer overflow::vulnerability related to limited space for a string (typically) where that space is exceeded, usually in a strcpy, or where the null terminator is not present
+int::the typical 4-byte integer data type in c; see also signed vs unsigned, long, long long, short; overflows of this type cause many problems
+%c, %d, %s, %x, %p::format specifiers for the printf fn in c, see also %03.2f, %-10s
+code::in top, the ram-resident part of the binary
+RES::in top, the total resident memory charged to this process
+nTH::in top, the total number of threads in the thread group of this process
+P::in top, the id of the last core this process ran on
+PID::the process id, some lower numbers reserved for system, uses a circular queue, kernel.pid_max might be lower than 2**bits, 32768 on 32-bit systems; in linux, each thread gets its own PID
+PPID::in top, the pid of the parent process of this process, must be a non-terminated process
+fork::a c lib function used to create a child process through the kernel function clone; copies all memory map to the child, returns child pid to the parent, 0 to the child, then allows divergence esp on the call stack and pc, but also the heap and the data section, any new libs or shared memory
+exec::e.g., execve, a way to replace the code of a running process with a different binary, including r-x, rw-, and r-- segments
+pthread_create::the posix thread create routine that is a modern alternative to fork
+sum_exec_runtime::in /proc/pid/sched, the total number of ms cpu time this process has received, with ns resolution, cf. TIME colmun in top
+policy::the scheduling policy used for this process, typically SCHED_OTHER (policy 0)
+policy vs mechanism::the high level description of desired system behavior wrt some aspect (e.g., resource distribution or contention resolution) vs the more detailed implementation with finer rules and algorithmic details
+FIFO/FCFS/RR::the basic "fair" queueing policy of first come first served, first in first out, round-robin, rejoining the queue at the back once "served", but does not require equal timeslices
+SCHED_OTHER::the normal users level-0 static (PR=20/120) round-robin time-sliced scheduling policy, subject to dynamic priority using nice values
+nice::a value from +19 to -20 that can be applied to the static PR value to create a dynamic PR value; 139 (+19) is the least priority job in the system
+SCHED_BATCH and SCHED_IDLE::alternatives to SCHED_OTHER that are not as interactive or as important
+real-time (rt)::a type of OS or system where deadlines need to be met (soft or hard penalties), e.g. QNX is designed to be an RTOS, linux only has some rt features
+real-time (rt)::a scheduling policy for some processes that require priority over SCHED_OTHER:  SCHED_RR and SCHED_DEADLINE will be linux rt policies
+original linux scheduler::refers to round-robin where higher priority jobs run first and with longer timeslices, like a multi-level queue with 139 queues, but all jobs get to run before the next timeslices are handed out (no hi prio starvation of lo prio tasks)
+SJF/SRJF/SBF::strawman (theoretical) scheduling policies that allow students to think about responsiveness and priority
+burst::ambiguous between a cpu burst, an i/o burst (network or disk), or memory burst, a burst of new task creation, but the main capacity-planning concern in system design wrt performance
+cpu-bound::a process that tends to use a lot of cpu, completing its time slices before an i/o or memory stall; also a phas of a process
+i/o-bound::a process that tends not to finish its timeslice because it requests i/o (not memory?) and is preempted by the system
+overhead::time spent by the system that is not considered useful work though may be essential to apply policy/mechanism
+system time::time accounted (charged) to the system, cf. user time; both are typically cpu time, not wall clock time
+throughput::number of jobs completed per time measure by a system, e.g., 140 tasks/second
+bandwidth::an upper limit of throughput, especially in flows such as networking, e.g., 100Gbits/sec
+response time::somewhat vague measure of the time it takes for the system to respond to an event, usually of concern to a user, usually a human user, vague because some "responses" take more time than trivial acknowledgement; mostly the time in queue waiting for a first cpu timeslice after user input; cf. first meaningful page impression in web response time; closely related to latency
+turnaround time::the time it takes to move a job/task/process from creation/admission to completion/termination
+fairness::in scheduling, the idea that jobs/tasks/processes should not be starved
+fairness measure::a quantification of fairness that attempts to measure a meaningful lack of fairness
+Jain's fairness measure::a normalized squared-sum approach to a set of allocations that aims for equitable distribution
+starvation::ambiguous because one can be starved for 1s, or .001s, but this is the time a process spends in the ready queue without being selected, and implies that it is notable
+Loui's fairness suggestion::measure fairness in terms of appropriate asymmetry, starvation of processes by their peers (or lower prio), not by higher priorty processes
+MLFQ::multi-level feedback queue, where processes start with high priority, getting preemptive service with short timeslices, then fall as they use up their allotments
+aging::promoting older low prio processes to higher priority on occassion, aka age-based priority boost
+preemption::two types: in os, mainly premature removal of a process from the cpu (or other resource) because of the arrival or other suddden service of a higher prio process; in queueing generally, moving a high prio job ahead of another so it can be selected first, or earlier, cf. queue discipline
+kworker::a system process that is a kernel worker thread per cpu, name encodes its CPU affinity (if any), an id, its niceness (if any) and the workqueue name or description
+migration::a per cpu system & kernel process that handles moving a process from one core to another (probably handling cache issues), example of a rt process
+watchdog::per cpu system & kerneal process that checks for system health like cpu temp and can trigger immediate shutdown, example of a rt (policy scheduled) process; records and can reset/reboot; Loui thinks this is where cyberphysical systems should monitor sensor integrity so planes stop crashing 
+
+priority boosting::where a job gets a temporary boost in PR value by the OS (nice is a user-initiated deviation)
+phase change in program::when the process running the program enters a phase with different resource needs from earlier
+Ousterhout's Law::avoid voo-doo constants
+proportional share scheduler::scheduler starts with idea of equal or appropriately unequal divisions of latency into timeslices
+lottery scheduler::markov simulation of proportional share scheduler, approximates based on sampling asymptotics
+ticket mechanism::introduces a virtual economy to determine resource division
+stride scheduler::deterministic version of lottery scheduler, uses different sized deterministic steps to achieve proportions
+CFS::completely fair scheduler using vruntimes to determine who runs next (note unrelated to FCFS)
+vruntime::actual cpu time weighted nonlinearly by PR (note vrumtime weight called load, unrelated to system runtime queue length avgs)
+sched_latency::CFS target time to service all tasks in RR fashion, though it never uses RR to select next!
+min_granularity::CFS min time on cpu before checking for preemption by lower vruntime in ready queue
+sysctl::linux cli for viewing/changing system parameters, esp kernel as root
+red-black tree::complex O(nlogn) priority queue for O(logn) or O(1) selection of lowest vruntime
+top::the default text-based system monitor in linux, H for thread-view, f to select fields, V for parent-view, d to change update time
+PR::the static priority shown per process in top, 120 shown as 20, negative values have high priority, rt highest, different policy
+NI::the nice value shown per process in top output
+TGID::thread group id in top output
+CODE::size of executable per process in top output
+nDRT::dirty pages associated per process in top output, needs write-back to disk
+cache::(1) copy of data held temporarily in fast access area; (2) place to store data for faster access, temporarily, but possibly uniquely, ie, not a copy because of write-back policy
+simultaneous cache lookup::sometimes can be done across multiple levels of cache
+cache hit::reference found entirely in cache, shown around 98%, depending on temporal and spatial locality
+LRU::least-recently used replacement policy (for cache, or DRAM)
+pseudo-LRU::approximate LRU, often clock or other circular queue with dynamic next pointer
+trapping to OS::typically from user mode to kernel mode to change state in a nontrivial or privileged way
+k-way associative cache::each reference has k possible cache lines where it could be found/placed
+fully-associative cache::a reference could be in any of the n available cache lines for the set
+cache bank::segregation of cache into parts for more size, usually using higher bits for segregation, adds complexity and power drain
+cache read miss::cache miss on an attempted read; must attempt read from slower storage; usually new data inserted into cache
+cache write miss::cache miss on an attempted write; write directly to cache (possibly after replacement) then write back, or write through to slower storage and insert into cache
+cache coherence::part of the hardware memory model to keep caches sharing lines "simultaneously" updated on writes, using propagation
+transaction serialization::part of the hardware memory model to enforce certin kinds of correctness, esp wrt read and write interleaving
+temporal locality::when one "piece of data" is referenced repeatedly within a small time interval; granularity could mean a byte, a line, a page/frame, or set of pages/frames
+spatial locality::when data referenced is located "close to" data "recently" referrenced; granularity could mean next byte, next contiguous page, next disk block, usually prefetchable
+cache affinity / cpu affinity::often called the latter but meaning the former; preference for staying on a cpu with the same cache so data populating the cache can exploit temporal locality (and spatial if prefetched well)
+capacity of the cache::number of lines, or more vaguely, its tendency to have cache hits across larger times, larger distances if prefetching
+access pattern::the pattern of data references by a process in a phase
+load balancing::spreading load across substitutable (but possibly not identical) resources, esp cpus (including performance and efficient cores in hybrid/asymmetric fashion)
+per-CPU ready queue::no shared ready queues for cpu, at least across a set of cpus; opposite of shared ready queue
+cache flushing::removing data from a cache without on-demand replacement; usually full flush on context switch usually for security, by hw or os
+cache invalidation::like cache flushing but perhaps just a line or few, not necessarily whole cache flush
+warm in cache::sometimes used metaphor for good cache hit behavior for a process
+spectre/meltdown::bad cve that involved cache snooping during speculative execution / misprediction in hw
+linux o(1) scheduler::preemptive version of a mlfq using two arrays of linked lists and switching the main pointer when one current array empties (actually only achieves RR for the lowest prio class since preemptive)
+peek and poke::one way to induce behaviors when addresses are known, or programs loaded at knowable base locations and contiguous
+external fragmentation::general term for small memory holes that cannot be coalesced because non-adjacent
+vAddr::virtual address for program relocation or virtualization, not to be confused with virtual memory in re:swapping/paging to disk, basically the numbers in a process memory map
+ASID::address space id, basically PID, but possbily some ASIDS are PID-less
+VIRT::virtual address space charged per process in top output, often lazy allocation overcharge
+RES::physical resident DRAM charged per process in top output, real memory use, modulo shared (SHR) memory
+MMU::hardware memory management unit, off cpu, originally calculating offsets, now including TLB and other duties
+TLB::translation lookaside buffer, contains cached translations from ASIDxvAddr to PFN, may have its own levels and banks
+PFN::physical frame number
+frame::quantum of actual DRAM, usually 4kB (4096 bytes)
+segment::usually vAddr range, contiguous in eyes of process (but usually not contiguous in physical memory), possibly arbitrary length; in linux, a multiple of page size
+memory hole::where segments are not adjacent, evidence of external fragmentation
+page::fixed size (usually 4kB) of contiguous vAddrs; also huge pages, 2MB, 4MB, or more, rare birds often contiguous in PFNs
+internal fragmentation::general term for wasted memory because minimum size of page or frame (or block, ...)
+page table::how the OS keeps track of vAddr to PFN translations when TLB miss, often ridiculously sparse, hence use HPT or IPT, usually per process
+PTE::a page table entry, typically one entry per segment, not per individual page; note larger or huge pages use fewer PTEs
+CAM hardware::content-addressable memory, basically a fast associative array/hash table/dictionary used for TLB
+TLB shootdown::basically a full cache flush or selective cache invalidation applied to the TLB
+TLB tag::basically the ASID
+heap allocation strategy::per malloc request policy for finding space requested:  best fit, worst, first, next, near, last freed, random; actually uses hybrid with bins of sizes
+free list::idea that if there were a list of contiguous free bytes after malloc/free, one could traverse that list as part of heap allocation strategy; may also used in any contiguous memory allocation mechanism; used even if data structure is not a linked list
+append / prepend::in the context of free list, whether freed blocks of contiguous bytes go on front or back of linked list
+coalescing::joining adjacent free ranges to create a larger range from their union
+unsorted list::recently freed blocks of contiguous bytes not yet placed in sorted bins, for immediate reallocation of same size
+thread safety::ensuring that parallel accesses by two or more threads maintains correct state (usually consistency or serialization) for next events (reads, writes, etc.)
+slabs::pools of fixed sized objects used/reused by the kernel to avoid internatl frag on pages/frames, may take more than 1 page
+slab object::a fixed sized object in a slab; objects per slab determined in advance
+buddy allocation::compromise between coalescing time and internal frag, no external frag, using contiguous pages in powers of two and coalescing only with buddy;/proc/buddyinfo shows buddy applied to physical memory (even though contiguity is less of an issue with dram)
+fast bin::contiguous memory recently released, not coalesced, assuming another malloc might want same or similar size, like a user-level slab
+HPT::hierarchical page table where pointers point to subtables (actually higher order bits are used for direct access), which themselves point to subtables; the point being that most of those subtables are empty, hence saving space by omitting them entirely; requires k references to find translation for height k
+valid bit::often used to indicate page is in memory in a page table entry, just as a dirty bit indicates writeback needed
+bitmap::compressed data structure for array of boolean, which usually use a byte for boolean, so 8:1 compression and direct addressing
+PTBR::page table base register, allows quick indexing with offsets added to base
+PTLR::page table length register, at least for each table in a hierarchy, allows correctness checking any offset indexing
+TLB miss::reference requires OS to use sw to find page translation in HPT or IPT, which can be done in parallel; associative caches can be searched in parallel and often are; L1, L2, L3 can be searched in parallel but often are NOT (power/complexity of routing issue)
+
+IPT::inverted page table, software hash for page table translation
+cache conscious layout::improving spatial locality so prefetching lines is improved (see also chasing pointers on disk)
+swap space::allowing part of disk to act as virtual memory
+swap file::one way to implement swap space esp in microsoft OS, see also swap partition (linux)
+page in/page out::transferring data from memory to swap space on disk, or vice versa
+memory pressure::vague idea of rate of memory consumption, see also high and low watermark
+swappiness::linux kernel parameter for tendency to swap out before 100% of memory used, 0-100
+page fault::when a PTE does not find a page in memory (maybe in swap space, maybe needs to be created, maybe file on disk mapped in memory)
+nMaj, vMaj::major page faults, number or delta since last update of top, required access of secondary memory (disk)
+nMin, vMin::minor page fautlt, number or delta, did not require disk i/o, served by disk cache (or swap cache)
+disk cache::memory that is copy of what is on disk but still in memory, i.e., disk-backed non-dirty frames, adds to free mem to show available
+swap cache::memory that is copy of what is on disk specifically in swap space; i.e., it should be in memory but was swapped out to disk but a copy is still in memory
+buffer::often reported in linux with disk cache, but different purpose, for buffering writes esp streaming i/o
+mlocked::memory locked in memory that cannot be swapped out
+kswapd::kernel daemon responsible for swap out
+page replacement algorithm or policy::strategy for deciding victim page/frame when paging in and insufficient free memory
+vm.page-cluster::power of 2 for max number of contiguous pages swapped in as pre-fetch when swapping in a page
+clustering::may also refer to swap out, not just swap in
+virtual memory::ambiguous term for using swap area on disk for pages/frames mapped to secondary memory (NOT vAddr idea)
+extended memory::marketing term for swap space
+VMS::old DEC OS that was proud of its virtual memory subsystem
+appliance OS::lower-functionality OS than general-purpose, aimed at controlling a specific kind of system
+incrementalism::philosophy of design where new is based heavily on prior to avoid massive unforseen failures
+thread-specific stack::stack area for a thread visible in address space of threads sharing thread group
+thread-local storage::area adjacent to thread-specific stack where global variables get localized to avoid threads colliding making routines that were not intended for multi-threading MT-safe
+lightweight process clone::pthread_create
+lpthread::the library required at the command line with gcc or cc when using a thread library
+data race::when nondeterminism results because of timing of thread execution that accesses shared data, specifically involving writes
+mutex::one user at a time for a resource, mutual exclusion, usually a mechanism for creating mutual exclusion, if not guaranteeing it
+spinlock::a lock used to achieve mutex, where threads spin wait on cpu to acquire the lock once freed/released
+semaphore::a counter that locks a resource that is shareable once the limit is reached
+atomic operation::usually guaranteed by hardware, a multi-step operation that cannot be interrupted by another thread or process once started
+barrier::a software declaration that memory or processes need to be synchronized at some point, usually with waits issued by the compiler
+advisory lock::a lock that requires a thread to check whether the lock is held voluntarily (linux)
+mandatory lock::a lock that is enforced by the OS (microsoft)
+lock granularity::the size of the data locked, usually determining the amount of potential parallelism
+spin wait::also wait spin, busy wait, using cpu to poll for availability of a lock or flag, but can be paused to shorten wasted timeslices
+test and set::one kind of atomic operation often provided by hardware
+compare and swap::another kind of atomic operation
+Peterson's Algorithm::turn-yielding provably correct way of achieving mutex in software with three values (two variables, one an array with two values), if there is sequential consistency
+memory consistency model::memory operation discipline of the hardware (and possibly compiler), especially wrt cache read/write reorderings or cache coherence latency
+TSO::total store order, better than PSO but not as good as sequential consistency, as memory consistency models go
+Lamport's Bakery Algorithm::like Peterson's algorithm but uses a ticket numbering idea
+hinting::an idea where the programmer hints to the OS, e.g., that it is spin-waiting, so a pause or timeslice early expiry is possible
+Futex::fast userspace mutex, sometimes does not require the kernel's intervention (when lock is free, fastpath), did not have the bug that pthread_mutex_lock had
+Dahm lock::two phase, spins first, then sleeps and waits for notification (interrupts sleep)
+MCS lock::threads spin on local variable and notify next up
+priority inversion::where a lock is held by a lower prio process and a higher prio process needs that locked resource to proceed
+priority inheritance::when there is priority inversion, the lower prio process gets the priority of the highest prio process that is waiting for the lock to be released
+random boosting::microsoft way of solving priority inversion, randomly boosting priorty of processes when locks are held (and there are processes waiting)
+deadlock::when there is a circular wait of any length and progress cannot be made by any thread/process in the circle
+Coffman conditions for deadlock::mutex, holding, no preemption, circular wait
+livelock::vague idea of processes not technically deadlocked but not making progress, threads not blocked but not happy, typically cycling through states
+bankers algorithm::in 1d, require before giving a resource (e.g., a lock to a thread) that the recipient be able to complete and free that resource; in k-d, must simulate possible n-thread allocation orders and find at least one sequence of execution that leads to release of resource
+Dining Philosophers' Problem::simple illustration of deadlock-prone multi-processing with n threads and n pairwise shared resources
+ordered pickup::one solution to avoiding deadlock in Dining Philosophers'
+approximate counter::one illustration of delayed global accuracy so local counts can be separated for parallelism
+lock overhead::penalty for synchronization that prevents linear speedup with parallel processing
+hand over hand locking::locking nodes within a linked list rather than the whole linked list
+concurrent queue::another illustration of parallelizing data structure, head and tail have separate locks
+concurrent hash table::another illustration of parallelizing data structure, lock each collision chain for a hash bucket
+Knuth's Law::premature optimization is the root of all evil
+RAID::redundant array of independent disks, storage control that stripes for performance, mirrors for redundancy, or adds parity for error detection AND correction (RAID 0 striping, RAID 1 mirroring)
+CRC::cyclic redundancy check, just a fancy name for checksum that adds numeric representation of data chunks, then stores remainder mod k
+inode::in linux, where we store metadata, possibly even a checksum
+TMR::triple modular redundancy, a voting method for robust operation against 1-failure
+n-MR::n (odd n?) generalization of TMR to survive floor(n/2)-failure
+ZFS::Zettabyte file system which writes anew then switches pointer to data block rather than making changes in place
+bit rot::what disk scrubbing by checking data checksums tries to avoid
+authentication::allowing access to a resource based on knowing, having, or being; also behaving, situating, signed on elsewhere, system having
+MFA::multi-factor authentication
+hashed passwords::stored passwords not in plain text but using a hash function as cipher
+brute force::breaking a password by trying using enumeration of all possible
+rainbow table::if the hash function is known, pre-computing the hashes to discover common passwords easily from their hashed form (e.g., stealing the password file in hashed form)
+salt::added to user passwords to extend the length, unique to each password instance, combats rainbow tables, naive users
+pepper::added to user passwords to extend the length, stored separately, often same per user, combats theft of password hashes with salts, naive sysadmins
+password exposure::times and places where password must be revealed for authentication, hence available for leak, see progressive revelation
+perimeter authentication::idea that once authenticated, movement within the perimeter requires no further authentication, vs continuous authentication, layered defense, defense in depth
+attack surface::places where a system is vulnerable to attack by malign actor (independent of other failures that are non-adversarial)
+security by obscurity::hiding access in such a way that once the path or secret is known, there is no further or future protection
+principle of least privilege::idea that users and processes should have no more privileges than necessary to perform their intended task(s)
+MTD::moving target defense, changing locations, names, or paths to access so those in the know retain access but not those who discover but do not update
+SDN::software defined network, one way to implement MTD for servers
+RBAC::role-based authentication vs ABAC, attribute-based
+HistBAC::history-based authentication
+PathBAC::path-based authentication
+virtual machine::machine that is not bare-metal, require emulation on bare-metal machine (BMM); scalable, isolated, secure
+hypervisor::software that runs a guest OS as virtual machine; type-1:  no host OS; type-2:  host OS you can use independently; plays on supervisor=monitor=OS
+Xen::example popular type 1 hypervisor
+KVM::example popular type 2 hypervisor
+paravirtualization::allowing guest OS to communicate directly with host OS or BMM drivers, esp for i/o performance using hypercalls, bypassing emulation
+container::considered alternative to hypervisor but is really a packaging of software, not an isolation and emulation; less secure, more like virtual backend web services with minimal dependencies specified in config files
+
