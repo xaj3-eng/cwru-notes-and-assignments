@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CWRU Notes &amp; Assignments</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+      background: #0d1117;
+      color: #e6edf3;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #f0f6fc;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #7d8590;
+      margin-bottom: 1.5rem;
+    }
+
+    #status {
+      font-size: 0.85rem;
+      color: #7d8590;
+      margin-bottom: 1rem;
+    }
+
+    .tree { list-style: none; }
+
+    .tree li { line-height: 1.7; }
+
+    .dir-label {
+      cursor: pointer;
+      user-select: none;
+      color: #79c0ff;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+    }
+    .dir-label:hover { background: #161b22; }
+
+    .dir-label .arrow {
+      display: inline-block;
+      transition: transform 0.15s;
+      font-style: normal;
+      font-size: 0.75rem;
+      color: #7d8590;
+    }
+    .dir-label.open .arrow { transform: rotate(90deg); }
+
+    .dir-children {
+      padding-left: 1.4rem;
+      border-left: 1px solid #21262d;
+      margin-left: 0.6rem;
+    }
+    .dir-children.hidden { display: none; }
+
+    a.file-link {
+      color: #e6edf3;
+      text-decoration: none;
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    a.file-link:hover { background: #161b22; color: #58a6ff; }
+
+    .icon { font-size: 0.85rem; }
+
+    #error {
+      color: #f85149;
+      font-size: 0.9rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>CWRU Notes &amp; Assignments</h1>
+  <div class="subtitle">xaj3-eng/cwru-notes-and-assignments</div>
+  <div id="status">Loading...</div>
+  <div id="error"></div>
+  <ul class="tree" id="tree"></ul>
+
+  <script>
+    const OWNER = 'xaj3-eng';
+    const REPO  = 'cwru-notes-and-assignments';
+    const BRANCH = 'main';
+
+    const SKIP = new Set(['.git', 'index.html']);
+
+    function fileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      const icons = {
+        pdf: '📄', png: '🖼', jpg: '🖼', jpeg: '🖼', gif: '🖼', svg: '🖼',
+        md: '📝', typ: '📝', tex: '📝', txt: '📝',
+        py: '🐍', js: '📜', ts: '📜', html: '🌐', css: '🎨',
+        json: '📋', yaml: '📋', yml: '📋', toml: '📋',
+        zip: '📦', tar: '📦', gz: '📦',
+      };
+      return icons[ext] || '📄';
+    }
+
+    // Build a nested object from flat path list
+    function buildTree(items) {
+      const root = {};
+      for (const item of items) {
+        const parts = item.path.split('/');
+        if (parts.some(p => SKIP.has(p))) continue;
+        let node = root;
+        for (let i = 0; i < parts.length - 1; i++) {
+          node[parts[i]] = node[parts[i]] || { _type: 'dir', _children: {} };
+          node = node[parts[i]]._children;
+        }
+        const leaf = parts[parts.length - 1];
+        if (item.type === 'tree') {
+          node[leaf] = node[leaf] || { _type: 'dir', _children: {} };
+        } else {
+          node[leaf] = { _type: 'blob', _path: item.path };
+        }
+      }
+      return root;
+    }
+
+    function fileUrl(path) {
+      return `https://github.com/${OWNER}/${REPO}/blob/${BRANCH}/${encodeURIComponent(path).replace(/%2F/g, '/')}`;
+    }
+
+    function renderTree(node, open = false) {
+      const ul = document.createElement('ul');
+      ul.className = 'tree';
+
+      const entries = Object.entries(node).sort(([a, av], [b, bv]) => {
+        // dirs first, then files, both alphabetical
+        const ad = av._type === 'dir', bd = bv._type === 'dir';
+        if (ad !== bd) return ad ? -1 : 1;
+        return a.localeCompare(b);
+      });
+
+      for (const [name, val] of entries) {
+        const li = document.createElement('li');
+
+        if (val._type === 'dir') {
+          const label = document.createElement('span');
+          label.className = 'dir-label' + (open ? ' open' : '');
+          label.innerHTML = `<i class="arrow">&#9654;</i><span class="icon">📁</span>${name}`;
+
+          const children = renderTree(val._children, false);
+          children.className = 'tree dir-children' + (open ? '' : ' hidden');
+
+          label.addEventListener('click', () => {
+            label.classList.toggle('open');
+            children.classList.toggle('hidden');
+          });
+
+          li.appendChild(label);
+          li.appendChild(children);
+        } else {
+          const a = document.createElement('a');
+          a.className = 'file-link';
+          a.href = fileUrl(val._path);
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.innerHTML = `<span class="icon">${fileIcon(name)}</span>${name}`;
+          li.appendChild(a);
+        }
+
+        ul.appendChild(li);
+      }
+
+      return ul;
+    }
+
+    async function load() {
+      const status = document.getElementById('status');
+      const errEl  = document.getElementById('error');
+      const treeEl = document.getElementById('tree');
+
+      try {
+        const url = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+        const data = await res.json();
+
+        const nested = buildTree(data.tree);
+        const rendered = renderTree(nested, true);
+
+        // Expand top-level dirs by default
+        rendered.querySelectorAll(':scope > li > .dir-label').forEach(el => {
+          el.classList.add('open');
+          el.nextSibling.classList.remove('hidden');
+        });
+
+        treeEl.replaceWith(rendered);
+        status.textContent = `${data.tree.filter(i => i.type === 'blob').length} files`;
+      } catch (e) {
+        status.textContent = '';
+        errEl.style.display = 'block';
+        errEl.textContent = `Failed to load file tree: ${e.message}`;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

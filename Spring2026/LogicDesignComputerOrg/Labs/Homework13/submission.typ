@@ -4,46 +4,46 @@
 
 #title[Homework 13][Xander Jhaveri]
 
-= Screenshots Showing PORTA Stimulus
+= Screenshots Showing `PORTA` Stimulus
 
 #figure(
   image("PORTA0x02_wrong.png"),
-  caption: [`PORTA = 0x02`, Incorrect Guess]
+  caption: [`PORTA = 0x02`, Incorrect Guess],
 )
 
 #figure(
   image("PORTA0x02_correct.png"),
-  caption: [`PORTA = 0x02`, Correct Guess]
+  caption: [`PORTA = 0x02`, Correct Guess],
 )
 
 #figure(
-  image("PORTA0x04.png"),
-  caption: [`PORTA = 0x04`, Incorrect Guess]
+  image("PORTA0x04_correct.png"),
+  caption: [`PORTA = 0x04`, Correct Guess],
 )
 
 #figure(
   image("PORTA0x0C.png"),
-  caption: [`PORTA = 0x0C`, Incorrect Guess]
+  caption: [`PORTA = 0x0C`, Incorrect Guess],
 )
 
 #figure(
   image("s0x01.png"),
-  caption: [`PORTA = 0x00, S = 0x01`]
+  caption: [`PORTA = 0x00, S = 0x01`],
 )
 
 #figure(
   image("s0x02.png"),
-  caption: [`PORTA = 0x00, S = 0x02`]
+  caption: [`PORTA = 0x00, S = 0x02`],
 )
 
 #figure(
   image("s0x04.png"),
-  caption: [`PORTA = 0x00, S = 0x04`]
+  caption: [`PORTA = 0x00, S = 0x04`],
 )
 
 #figure(
   image("s0x08.png"),
-  caption: [`PORTA = 0x00, S = 0x08`]
+  caption: [`PORTA = 0x00, S = 0x08`],
 )
 
 
