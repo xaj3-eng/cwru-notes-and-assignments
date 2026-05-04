@@ -91,7 +91,7 @@ MAIN_PROGRAM    CODE
     ; At a 100kHz clock frequency, there are 25k instructions processed per sec
     ; So we need to go through 25000 clock cycles before changing S
 
-    ; Every iteration of the main loop (not including changing S) is about 7 cycles:
+    ; Every iteration of the main loop (not including changing S) is about 8 cycles:
     ; - 1 cycle for clrf PORTB
     ; - 1 cycle for the movf,
     ; - 1 cycle for the andlw

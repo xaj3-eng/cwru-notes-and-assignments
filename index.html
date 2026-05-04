@@ -4,215 +4,425 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CWRU Notes &amp; Assignments</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: ui-monospace, 'Cascadia Code', Menlo, monospace;
       background: #0d1117;
       color: #e6edf3;
-      padding: 2rem;
-      min-height: 100vh;
     }
 
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      color: #f0f6fc;
-    }
+    /* ── Layout ───────────────────────────────────────────── */
+    .app { display: flex; flex-direction: column; height: 100%; }
 
-    .subtitle {
-      font-size: 0.8rem;
-      color: #7d8590;
-      margin-bottom: 1.5rem;
+    header {
+      flex-shrink: 0;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
     }
+    header h1    { font-size: 1rem; font-weight: 600; color: #f0f6fc; }
+    header .repo { font-size: 0.75rem; color: #7d8590; }
+    header .count { font-size: 0.75rem; color: #7d8590; margin-left: auto; }
 
-    #status {
-      font-size: 0.85rem;
-      color: #7d8590;
-      margin-bottom: 1rem;
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ──────────────────────────────────────────── */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border-right: 1px solid #21262d;
+      padding: 0.4rem 0;
     }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
 
     .tree { list-style: none; }
-
-    .tree li { line-height: 1.7; }
 
     .dir-label {
       cursor: pointer;
       user-select: none;
       color: #79c0ff;
-      font-weight: 600;
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 0.35rem;
-      padding: 0.1rem 0.3rem;
-      border-radius: 4px;
+      gap: 0.3rem;
+      padding: 0.22rem 0.5rem;
+      font-size: 0.82rem;
     }
     .dir-label:hover { background: #161b22; }
 
-    .dir-label .arrow {
+    .arrow {
       display: inline-block;
-      transition: transform 0.15s;
-      font-style: normal;
-      font-size: 0.75rem;
+      transition: transform 0.12s;
+      font-size: 0.6rem;
       color: #7d8590;
+      flex-shrink: 0;
     }
     .dir-label.open .arrow { transform: rotate(90deg); }
 
     .dir-children {
-      padding-left: 1.4rem;
+      padding-left: 1rem;
       border-left: 1px solid #21262d;
-      margin-left: 0.6rem;
+      margin-left: 1rem;
     }
     .dir-children.hidden { display: none; }
 
-    a.file-link {
-      color: #e6edf3;
-      text-decoration: none;
-      padding: 0.1rem 0.3rem;
-      border-radius: 4px;
-      display: inline-flex;
+    .file-item {
+      cursor: pointer;
+      padding: 0.22rem 0.5rem;
+      font-size: 0.82rem;
+      display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.3rem;
+      color: #e6edf3;
     }
-    a.file-link:hover { background: #161b22; color: #58a6ff; }
+    .file-item:hover  { background: #161b22; }
+    .file-item.active { background: #1f3a5f; color: #79c0ff; }
 
-    .icon { font-size: 0.85rem; }
+    /* ── Content pane ─────────────────────────────────────── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 
-    #error {
-      color: #f85149;
+    .content-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid #21262d;
+      flex-shrink: 0;
+    }
+    .content-header h2 { font-size: 0.95rem; font-weight: 600; color: #f0f6fc; }
+    .content-header a {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: #58a6ff;
+      text-decoration: none;
+    }
+    .content-header a:hover { text-decoration: underline; }
+
+    .placeholder {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7d8590;
+      font-size: 0.85rem;
+    }
+
+    /* code */
+    pre {
+      flex: 1;
+      border-radius: 6px;
+      overflow: auto;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+    pre code.hljs { border-radius: 6px; }
+    pre.plain {
+      background: #161b22;
+      padding: 1rem;
+      color: #e6edf3;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* images */
+    .img-wrap { flex: 1; display: flex; justify-content: center; }
+    .img-wrap img { max-width: 100%; max-height: 82vh; border-radius: 4px; object-fit: contain; }
+
+    /* PDFs */
+    .pdf-frame { flex: 1; width: 100%; min-height: 82vh; border: none; border-radius: 4px; }
+
+    /* ── Markdown ─────────────────────────────────────────── */
+    .md {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 0.9rem;
-      display: none;
+      line-height: 1.75;
+      color: #e6edf3;
+      max-width: 820px;
     }
+    .md h1,.md h2,.md h3,.md h4,.md h5,.md h6 {
+      margin: 1.4rem 0 0.5rem;
+      font-weight: 600;
+      color: #f0f6fc;
+      line-height: 1.3;
+    }
+    .md h1 { font-size: 1.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid #21262d; }
+    .md h2 { font-size: 1.2rem; padding-bottom: 0.2rem; border-bottom: 1px solid #21262d; }
+    .md h3 { font-size: 1rem; }
+    .md p  { margin: 0.6rem 0; }
+    .md ul, .md ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+    .md li { margin: 0.2rem 0; }
+    .md code {
+      background: #161b22;
+      padding: 0.15rem 0.35rem;
+      border-radius: 3px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.85em;
+      color: #ff7b72;
+    }
+    .md pre {
+      background: #161b22;
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.75rem 0;
+    }
+    .md pre code { background: none; padding: 0; color: #e6edf3; font-size: 0.82rem; }
+    .md blockquote {
+      border-left: 3px solid #30363d;
+      padding-left: 1rem;
+      color: #7d8590;
+      margin: 0.75rem 0;
+    }
+    .md table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; font-size: 0.85rem; }
+    .md th, .md td { border: 1px solid #30363d; padding: 0.4rem 0.75rem; text-align: left; }
+    .md th { background: #161b22; }
+    .md a  { color: #58a6ff; }
+    .md hr { border: none; border-top: 1px solid #30363d; margin: 1rem 0; }
+    .md img { max-width: 100%; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <h1>CWRU Notes &amp; Assignments</h1>
-  <div class="subtitle">xaj3-eng/cwru-notes-and-assignments</div>
-  <div id="status">Loading...</div>
-  <div id="error"></div>
-  <ul class="tree" id="tree"></ul>
+<div class="app">
+  <header>
+    <h1>CWRU Notes &amp; Assignments</h1>
+    <span class="repo">xaj3-eng/cwru-notes-and-assignments</span>
+    <span class="count" id="count"></span>
+  </header>
+  <div class="main">
+    <aside class="sidebar" id="sidebar">
+      <div style="padding:0.5rem 1rem;font-size:0.75rem;color:#7d8590">Loading...</div>
+    </aside>
+    <div class="content" id="content">
+      <div class="placeholder">Select a file to view it</div>
+    </div>
+  </div>
+</div>
 
-  <script>
-    const OWNER = 'xaj3-eng';
-    const REPO  = 'cwru-notes-and-assignments';
-    const BRANCH = 'main';
+<script>
+const OWNER  = 'xaj3-eng';
+const REPO   = 'cwru-notes-and-assignments';
+const BRANCH = 'main';
+const SKIP   = new Set(['index.html']);
 
-    const SKIP = new Set(['.git', 'index.html']);
+const rawUrl  = p => `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${p.split('/').map(encodeURIComponent).join('/')}`;
+const blobUrl = p => `https://github.com/${OWNER}/${REPO}/blob/${BRANCH}/${p.split('/').map(encodeURIComponent).join('/')}`;
+const fileExt = n => n.includes('.') ? n.split('.').pop().toLowerCase() : '';
 
-    function fileIcon(name) {
-      const ext = name.split('.').pop().toLowerCase();
-      const icons = {
-        pdf: '📄', png: '🖼', jpg: '🖼', jpeg: '🖼', gif: '🖼', svg: '🖼',
-        md: '📝', typ: '📝', tex: '📝', txt: '📝',
-        py: '🐍', js: '📜', ts: '📜', html: '🌐', css: '🎨',
-        json: '📋', yaml: '📋', yml: '📋', toml: '📋',
-        zip: '📦', tar: '📦', gz: '📦',
-      };
-      return icons[ext] || '📄';
+const IMAGE_EXTS = new Set(['png','jpg','jpeg','gif','svg','webp','bmp','ico']);
+const CODE_LANG  = {
+  js:'javascript', mjs:'javascript', jsx:'javascript',
+  ts:'typescript',  tsx:'typescript',
+  py:'python', rb:'ruby', rs:'rust', go:'go', kt:'kotlin',
+  swift:'swift', cs:'csharp', java:'java', php:'php',
+  c:'c', cpp:'cpp', h:'c', hpp:'cpp',
+  html:'html', css:'css', scss:'scss', sql:'sql',
+  sh:'bash', bash:'bash', zsh:'bash',
+  json:'json', yaml:'yaml', yml:'yaml', toml:'toml', xml:'xml',
+  tex:'latex', r:'r', lua:'lua', vim:'vim',
+};
+
+function fileIcon(name) {
+  const e = fileExt(name);
+  if (e === 'pdf')          return '📄';
+  if (IMAGE_EXTS.has(e))   return '🖼';
+  if (e === 'md')           return '📝';
+  if (['zip','tar','gz','7z'].includes(e)) return '📦';
+  return '📃';
+}
+
+// ── Tree ──────────────────────────────────────────────────────
+
+function buildTree(items) {
+  const root = {};
+  for (const item of items) {
+    if (SKIP.has(item.path) || item.path.startsWith('.')) continue;
+    const parts = item.path.split('/');
+    let node = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const p = parts[i];
+      node[p] ??= { _type: 'dir', _children: {} };
+      node = node[p]._children;
     }
-
-    // Build a nested object from flat path list
-    function buildTree(items) {
-      const root = {};
-      for (const item of items) {
-        const parts = item.path.split('/');
-        if (parts.some(p => SKIP.has(p))) continue;
-        let node = root;
-        for (let i = 0; i < parts.length - 1; i++) {
-          node[parts[i]] = node[parts[i]] || { _type: 'dir', _children: {} };
-          node = node[parts[i]]._children;
-        }
-        const leaf = parts[parts.length - 1];
-        if (item.type === 'tree') {
-          node[leaf] = node[leaf] || { _type: 'dir', _children: {} };
-        } else {
-          node[leaf] = { _type: 'blob', _path: item.path };
-        }
-      }
-      return root;
+    const leaf = parts.at(-1);
+    if (item.type === 'tree') {
+      node[leaf] ??= { _type: 'dir', _children: {} };
+    } else {
+      node[leaf] = { _type: 'blob', _path: item.path };
     }
+  }
+  return root;
+}
 
-    function fileUrl(path) {
-      return `https://github.com/${OWNER}/${REPO}/blob/${BRANCH}/${encodeURIComponent(path).replace(/%2F/g, '/')}`;
-    }
+let activeItem = null;
 
-    function renderTree(node, open = false) {
-      const ul = document.createElement('ul');
-      ul.className = 'tree';
+function renderTree(node, depth = 0) {
+  const ul = document.createElement('ul');
+  ul.className = 'tree';
 
-      const entries = Object.entries(node).sort(([a, av], [b, bv]) => {
-        // dirs first, then files, both alphabetical
-        const ad = av._type === 'dir', bd = bv._type === 'dir';
-        if (ad !== bd) return ad ? -1 : 1;
-        return a.localeCompare(b);
+  const sorted = Object.entries(node).sort(([a, av], [b, bv]) => {
+    const ad = av._type === 'dir', bd = bv._type === 'dir';
+    if (ad !== bd) return ad ? -1 : 1;
+    return a.localeCompare(b, undefined, { numeric: true });
+  });
+
+  for (const [name, val] of sorted) {
+    const li = document.createElement('li');
+
+    if (val._type === 'dir') {
+      const startOpen = depth < 1;
+      const label = document.createElement('div');
+      label.className = 'dir-label' + (startOpen ? ' open' : '');
+      label.innerHTML = `<span class="arrow">&#9654;</span><span>📁</span><span>${name}</span>`;
+
+      const kids = renderTree(val._children, depth + 1);
+      kids.className = 'tree dir-children' + (startOpen ? '' : ' hidden');
+
+      label.addEventListener('click', () => {
+        label.classList.toggle('open');
+        kids.classList.toggle('hidden');
       });
 
-      for (const [name, val] of entries) {
-        const li = document.createElement('li');
+      li.append(label, kids);
+    } else {
+      const item = document.createElement('div');
+      item.className = 'file-item';
+      item.innerHTML = `<span>${fileIcon(name)}</span><span>${name}</span>`;
 
-        if (val._type === 'dir') {
-          const label = document.createElement('span');
-          label.className = 'dir-label' + (open ? ' open' : '');
-          label.innerHTML = `<i class="arrow">&#9654;</i><span class="icon">📁</span>${name}`;
+      item.addEventListener('click', () => {
+        activeItem?.classList.remove('active');
+        activeItem = item;
+        item.classList.add('active');
+        openFile(val._path, name);
+      });
 
-          const children = renderTree(val._children, false);
-          children.className = 'tree dir-children' + (open ? '' : ' hidden');
-
-          label.addEventListener('click', () => {
-            label.classList.toggle('open');
-            children.classList.toggle('hidden');
-          });
-
-          li.appendChild(label);
-          li.appendChild(children);
-        } else {
-          const a = document.createElement('a');
-          a.className = 'file-link';
-          a.href = fileUrl(val._path);
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          a.innerHTML = `<span class="icon">${fileIcon(name)}</span>${name}`;
-          li.appendChild(a);
-        }
-
-        ul.appendChild(li);
-      }
-
-      return ul;
+      li.appendChild(item);
     }
 
-    async function load() {
-      const status = document.getElementById('status');
-      const errEl  = document.getElementById('error');
-      const treeEl = document.getElementById('tree');
+    ul.appendChild(li);
+  }
+  return ul;
+}
 
-      try {
-        const url = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
-        const data = await res.json();
+// ── Viewer ────────────────────────────────────────────────────
 
-        const nested = buildTree(data.tree);
-        const rendered = renderTree(nested, true);
+const contentEl = document.getElementById('content');
 
-        // Expand top-level dirs by default
-        rendered.querySelectorAll(':scope > li > .dir-label').forEach(el => {
-          el.classList.add('open');
-          el.nextSibling.classList.remove('hidden');
-        });
+function setContent(path, name, body) {
+  contentEl.innerHTML = '';
+  const header = document.createElement('div');
+  header.className = 'content-header';
+  header.innerHTML = `<h2>${name}</h2>
+    <a href="${blobUrl(path)}" target="_blank" rel="noopener">Open on GitHub ↗</a>`;
+  contentEl.append(header, body);
+}
 
-        treeEl.replaceWith(rendered);
-        status.textContent = `${data.tree.filter(i => i.type === 'blob').length} files`;
-      } catch (e) {
-        status.textContent = '';
-        errEl.style.display = 'block';
-        errEl.textContent = `Failed to load file tree: ${e.message}`;
-      }
+async function openFile(path, name) {
+  contentEl.innerHTML = '<div class="placeholder">Loading...</div>';
+  const e = fileExt(name);
+
+  try {
+    // ── PDF: fetch → blob URL → iframe (avoids mixed-content issues)
+    if (e === 'pdf') {
+      const res = await fetch(rawUrl(path));
+      if (!res.ok) throw new Error(res.statusText);
+      const url = URL.createObjectURL(await res.blob());
+      const frame = document.createElement('iframe');
+      frame.className = 'pdf-frame';
+      frame.src = url;
+      setContent(path, name, frame);
+      return;
     }
 
-    load();
-  </script>
+    // ── Image
+    if (IMAGE_EXTS.has(e)) {
+      const wrap = document.createElement('div');
+      wrap.className = 'img-wrap';
+      const img = document.createElement('img');
+      img.src = rawUrl(path);
+      img.alt = name;
+      wrap.appendChild(img);
+      setContent(path, name, wrap);
+      return;
+    }
+
+    // ── Text-based: fetch raw
+    const res = await fetch(rawUrl(path));
+    if (!res.ok) throw new Error(res.statusText);
+    const text = await res.text();
+
+    // Markdown
+    if (e === 'md') {
+      const div = document.createElement('div');
+      div.className = 'md';
+      div.innerHTML = marked.parse(text);
+      div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+      setContent(path, name, div);
+      return;
+    }
+
+    // Code with syntax highlighting
+    const lang = CODE_LANG[e];
+    const pre  = document.createElement('pre');
+    const code = document.createElement('code');
+    code.textContent = text;
+    if (lang) {
+      code.className = `language-${lang}`;
+      pre.appendChild(code);
+      hljs.highlightElement(code);
+    } else {
+      pre.className = 'plain';
+      pre.textContent = text;
+    }
+    setContent(path, name, lang ? pre : pre);
+
+  } catch (err) {
+    contentEl.innerHTML = `<div class="placeholder" style="color:#f85149">Error: ${err.message}</div>`;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────
+
+async function load() {
+  const sidebar = document.getElementById('sidebar');
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`
+    );
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const data = await res.json();
+
+    const blobs = data.tree.filter(i => i.type === 'blob' && !i.path.startsWith('.') && !SKIP.has(i.path));
+    document.getElementById('count').textContent = `${blobs.length} files`;
+
+    const tree = renderTree(buildTree(data.tree));
+    sidebar.innerHTML = '';
+    sidebar.appendChild(tree);
+  } catch (e) {
+    sidebar.innerHTML = `<div style="padding:1rem;font-size:0.8rem;color:#f85149">Error: ${e.message}</div>`;
+  }
+}
+
+load();
+</script>
 </body>
 </html>
